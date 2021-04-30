@@ -7,4 +7,4 @@ Federated Learning Illustration:
 
 UML Diagram: 
 
-<a href="https://ibb.co/jJg7nhq"><img src="https://i.ibb.co/vXZ201f/uml.png" alt="uml" border="0"></a>
+<a href="https://ibb.co/prj1Ly9"><img src="https://i.ibb.co/gFZrRVB/Federated-Learning.png" alt="Federated-Learning" border="0"></a>
