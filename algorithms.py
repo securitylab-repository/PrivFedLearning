@@ -59,21 +59,6 @@ class Algorithms():
 
             return model
 
-        def train_test(self, X_test, y_test, training_iterations):
-            """
-            Trains the model and adjust its weights with each iteration
-                Parameters:
-                    X_test (ndarray): feature vector of ints
-                    y_test (ndarray): label vector of ints
-                    training_iterations (int): number of iterations
-            """
-            for _ in range(training_iterations):
-                output = self.results(X_test)
-                error = y_test - output
-                # Backpropagation: Error weighted derivatives
-                adjustments = np.dot(X_test.T, error * self.sigmoid_dx(output))
-                self.weights = self.weights + adjustments
-
         def results(self, inputs):
             """
             Pass inputs through the perceptron to get the output
@@ -83,6 +68,6 @@ class Algorithms():
                     output (ndarray): normalized weighted sum of the inputs via sigmoid
             """
             inputs = inputs.astype(float)
-            self.weights = self.weights.astype(float)
+            #self.weights = self.weights.astype(float)
             output = self.sigmoid(np.dot(inputs, self.weights))
             return output
