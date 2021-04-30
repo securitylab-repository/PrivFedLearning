@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 from algorithms import Algorithms
 from server import Server
-from device import Device
 from aggregations import Aggregations
 from helpers import Helpers
 
@@ -13,18 +12,20 @@ if __name__ == "__main__":
     agg = Aggregations()
     perceptron = Algorithms.Perceptron()
     helper = Helpers()
-    local_data_list, local_output_list, device_list = server.initialization()
+    device_list = server.create_devices()
+    device = device_list[0]
+    local_data_list, local_output_list = device.initialization(device_list)
     df = helper.to_dataframe(local_data_list[0])
     df.to_csv("data.csv", sep=',', index=False)
     df = pd.read_csv('data.csv', delimiter=',')
 
     # Model updates with weights of first model and local data
-    trained_model_list = server.model_update(perceptron.weights, local_data_list, local_output_list, device_list, 10000)
+    trained_model_list = device.local_update(perceptron.weights, local_data_list, local_output_list, device_list, 10000)
 
     # Send gradients, aggregation
     agg_weights = agg.fedAvg(trained_model_list)
     # Send back model updates, updating models
-    updated_model_list = server.model_update(agg_weights, local_data_list, local_output_list, device_list, 10000)
+    updated_model_list = device.local_update(agg_weights, local_data_list, local_output_list, device_list, 10000)
 
     # TEST DATA
     X_test = np.array([[1,0,1],
@@ -34,7 +35,7 @@ if __name__ == "__main__":
 
     y_test = np.array([[1,0,1,0]]).T
 
-    perceptron.train_test(X_test, y_test, 100000)
+    perceptron.train(X_test, y_test, 100000) 
 
     A = str(input("Input 1: "))
     B = str(input("Input 2: "))
