@@ -1,6 +1,9 @@
 import numpy as np
 import random
 import time
+from math import exp
+from random import seed
+from random import random
 
 class Algorithms():
     class Perceptron():
@@ -68,174 +71,160 @@ class Algorithms():
                     output (ndarray): normalized weighted sum of the inputs via sigmoid
             """
             inputs = inputs.astype(float)
-            #self.weights = self.weights.astype(float)
             output = self.sigmoid(np.dot(inputs, self.weights))
             return output
 
-    class NeuralNetwork(Perceptron):
+    class NeuralNetwork():
         def __init__(self):
-            pass
+            """
+            NN constructor
+            Seed the random number generator
+            Set weights to a 3x1 matrix (input shape)
+            With values from -1 to 1 and mean 0
+            """
+            np.random.seed(int(time.time()))
+            self.weights = 2 * np.random.random((3, 1)) - 1
 
-        def init_params(self):
+        def initialize_network(self, n_inputs, n_hidden, n_outputs):
             """
-            Initialization of weights and biases
-                Returns:
-                    W1 (ndarray): first layer weights
-                    b1 (ndarray): first layer biases
-                    W2 (ndarray): second layer weights
-                    b2 (ndarray): second layer biases
-            """
-            W1 = 2 * np.random.rand(3, 3) - 1
-            b1 = 2 * np.random.rand(1, 3) - 1 # (3,1)
-            W2 = 2 * np.random.rand(3, 1) - 1
-            b2 = 2 * np.random.rand(1, 1) - 1
-            return W1, b1, W2, b2
-
-        def forward_prop(self, W1, b1, W2, b2, X):
-            """
-            Calculate the current loss
+            Initializes the neural network with one hidden layer
                 Parameters:
-                    W1 (ndarray): weights at first layer
-                    b1 (ndarray): bias at first layer
-                    W2 (ndarray): weights at second layer
-                    b2 (ndarray): bias at second layer
-                    X (ndarray): feature vector
+                    n_inputs (int): number of input layer nodes
+                    n_hidden (int): number of hidden layer nodes
+                    n_outputs (int): number of output layer nodes
                 Returns:
-                    Z1 (ndarray): unactivated layer 1
-                    A1 (int): activated layer 1
-                    Z2 (ndarray): unactivated layer 2
-                    A2 (int): activated layer 2
+                    network (list of lists): neural network
             """
-            Z1 = np.dot(X, W1) + b1
-            A1 = self.sigmoid(Z1)
-            Z2 = np.dot(A1, W2) + b2
-            A2 = self.sigmoid(Z2)
-            return Z1, A1, Z2, A2
+            network = list()
+            hidden_layer = [{'weights':[random() for i in range(n_inputs + 1)]} for i in range(n_hidden)]
+            network.append(hidden_layer)
+            output_layer = [{'weights':[random() for i in range(n_hidden + 1)]} for i in range(n_outputs)]
+            network.append(output_layer)
+            return network
 
-        def error(self, target, output):
+        def activate(self, weights, inputs):
             """
-            Returns the error
+            Calculate neuron activation for an input (Z = X * W + b)
                 Parameters:
-                    target (float): target output
-                    output (float): actual output A2
-            """
-            return 1/2 * (target - output)**2
-
-        def backward_prop(self, Z1, A1, Z2, A2, W1, W2, X, Y):
-            """
-            Calculate current gradient
-                Parameters:
-                    Z1 (ndarray): unactivated layer 1
-                    A1 (int): activated layer 1
-                    Z2 (ndarray): unactivated layer 2
-                    A2 (int): activated layer 2
-                    W1 (ndarray): first layer weights
-                    W2 (ndarray): second layer weights
-                    X (list of ndarray): training data
-                    Y (list of ndarray): testing data
+                    inputs (ndarray): feature vector
                 Returns:
-                    dw1 (ndarray): gradients of W1
-                    db1 (ndarray): gradients of b1
-                    dw2 (ndarray): gradients of W2
-                    db2 (ndarray): gradients of b2
+                    activation (ndarray): neuron activation
             """
-            Y = np.concatenate(Y, axis=0)
-            Y = np.delete(Y, 0)
-            Y = np.asarray(Y).reshape(-1, 1)
-            m = Y.size
-            dZ2 = self.error(A2, Y)
-            print('************** INSIDE BACKPROP **************')
-            print('A2: ', A2.shape)
-            print(A2)
-            print('Y: ', type(Y), Y.shape)
-            print(Y)
-            print('A2 - Y: ', (A2 - Y).shape)
-            print(A2 - Y)
-            print('dZ2: ', dZ2.shape)
-            print(dZ2)
-            print('A1: ', A1.shape)
-            print(A1)
-            print('A1.T: ', A1.T.shape)
-            print(A1.T)
-            dW2 = 1 / m * np.dot(dZ2.T, A1)
-            db2 = 1 / m * np.sum(dZ2) 
-            dZ1 = np.dot(W2.T, dZ2) * self.sigmoid_dx(Z1)
-            dW1 = 1 / m * np.dot(dZ1, X.T)
-            db1 = 1 / m * np.sum(dZ1)
-            return dW1, db1, dW2, db2
+            activation = weights[-1]
+            for i in range(len(weights)-1):
+                activation += weights[i] * inputs[i]
+            return activation
 
-        # server
-        def update_params(self, W1, b1, W2, b2, dW1, db1, dW2, db2, alpha):
+        def transfer(self, activation):
             """
-            Update Parameters
+            Sigmoid activation function
                 Parameters:
-                    W1 (ndarray): weights at first layer
-                    b1 (ndarray): bias at first layer
-                    W2 (ndarray): weights at second layer
-                    b2 (ndarray): bias at second layer
-                    dw1 (ndarray): gradients of W1
-                    db1 (ndarray): gradients of b1
-                    dw2 (ndarray): gradients of W2
-                    db2 (ndarray): gradients of b2
-                    alpha (float): learning rate
+                    activation (ndarray): neuron activation
                 Returns:
-                    W1 (ndarray): updated W1
-                    b1 (ndarray): updated b1
-                    W2 (ndarray): updated W2
-                    b2 (ndarray): updated b2
+                    sigmoid activation
             """
-            W1 = W1 - alpha * dW1
-            b1 = b1 - alpha * db1
-            W2 = W2 - alpha * dW2
-            b2 = b2 - alpha * db2
-            return W1, b1, W2, b2
+            return 1.0 / (1.0 + exp(-activation))
 
-        # server
-        def get_predictions(self, A2):
+        def forward_propagate(self, network, row):
             """
-            Get predictions
+            Forward propagate input to a network output
                 Parameters:
-                    A2 (int): activation layer 2
+                    network (list of lists): neural network
+                    row (list): input pattern
                 Returns:
-                    Predictions
+                    inputs (list): output of the forward pass
             """
-            return np.argmax(A2, 0)
+            inputs = row
+            for layer in network:
+                new_inputs = []
+                for neuron in layer:
+                    activation = self.activate(neuron['weights'], inputs)
+                    neuron['output'] = self.transfer(activation)
+                    new_inputs.append(neuron['output'])
+                inputs = new_inputs
+            return inputs
 
-        # server
-        def get_accuracy(self, predictions, Y):
+        def transfer_derivative(self, output):
             """
-            Get accuracy
+            Sigmoid derivative
                 Parameters:
-                    predictions (ndarray): predictions
-                    Y (ndaray): actual testing values
+                    output (float): output value of a neuron
                 Returns:
-                    accuracy (float)
+                    sigmoid derivative
             """
-            print(predictions, Y)
-            return np.sum(predictions == Y) / Y.size
+            return output * (1.0 - output)
 
-        # server
-        def gradient_descent(self, X, Y, alpha, iterations):
+        def backward_propagate_error(self, network, expected):
             """
-            Update the model
+            Backpropagate error and store in neurons
                 Parameters:
-                    X (list of ndaray): training data
-                    Y (list of ndaray): training labels
-                    alpha (float): learning step
-                    iterations (int): number of iterations
+                    network (list of lists): neural network
+                    expected (list): expected output values
                 Returns:
-                    W1 (ndarray): updated first layer weights
-                    b1 (ndarray): updated first layer biases
-                    W2 (ndarray): updated second layer weights
-                    b2 (ndarray): updated second layer biases
+                    void
             """
-            W1, b1, W2, b2 = self.init_params()
-            for i in range(iterations):
-                Z1, A1, Z2, A2 = self.forward_prop(W1, b1, W2, b2, X)
-                dW1, db1, dW2, db2 = self.backward_prop(Z1, A1, Z2, A2, W1, W2, X, Y)
-                W1, b1, W2, b2 = self.update_params(W1, b1, W2, b2, dW1, db1, dW2, db2, alpha)
-                if (i % 10 == 0):
-                    print("Iteration: ", i)
-                    predictions = self.get_predictions(A2)
-                    print(self.get_accuracy(predictions, Y))
-            return W1, b1, W2, b2
+            for i in reversed(range(len(network))):
+                layer = network[i]
+                errors = list()
+                if i != len(network)-1:
+                    for j in range(len(layer)):
+                        error = 0.0
+                        for neuron in network[i + 1]:
+                            error += (neuron['weights'][j] * neuron['delta'])
+                        errors.append(error)
+                else:
+                    for j in range(len(layer)):
+                        neuron = layer[j]
+                        errors.append(expected[j] - neuron['output'])
+                for j in range(len(layer)):
+                    neuron = layer[j]
+                    neuron['delta'] = errors[j] * self.transfer_derivative(neuron['output'])
+
+        def update_weights(self, network, row, l_rate):
+            """
+            Update network weights with error
+                Parameters:
+                    network (list of lists): neural network
+                    row (list): each row of the training data
+                    l_rate (float): learning rate
+                Returns:
+                    void
+            """
+            for i in range(len(network)):
+                inputs = row[:-1]
+                if i != 0:
+                    inputs = [neuron['output'] for neuron in network[i - 1]]
+                for neuron in network[i]:
+                    for j in range(len(inputs)):
+                        neuron['weights'][j] += l_rate * neuron['delta'] * inputs[j]
+                    neuron['weights'][-1] += l_rate * neuron['delta']
+
+        def train_network(self, network, train, l_rate, n_epoch, n_outputs):
+            """
+            Train a network for a fixed number of epochs
+                Parameters:
+                    network (list of lists): neural network
+                    train (list): training data
+                    l_rate (float): learning rate
+                    n_epoch (int): number of epochs
+                    n_outputs (int): number of outputs
+                Returns:
+                    model (dict): trained model dictionary
+            """
+            for epoch in range(n_epoch):
+                sum_error = 0
+                for row in train:
+                    outputs = self.forward_propagate(network, row)
+                    expected = [0 for i in range(n_outputs)]
+                    expected[row[-1]] = 1
+                    sum_error += sum([(expected[i]-outputs[i])**2 for i in range(len(expected))])
+                    self.backward_propagate_error(network, expected)
+                    self.update_weights(network, row, l_rate)
+                print('epoch=%d, lrate=%.3f, loss=%.3f' % (epoch, l_rate, sum_error))
+
+            model = {'output':outputs,
+                     'error':sum_error,
+                     'weights':self.weights,
+                    }
+
+            return model
