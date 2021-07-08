@@ -69,7 +69,7 @@ class Device(Server):
                 rand_devices (list): random selected devices list
                 n (int): number of subset of devices
         """
-        print('Enter subset max index size: (3)')
+        print('Enter subset max index size (3):')
         n = int(input())
         index_list = list(range(n))
         random.shuffle(index_list)
