@@ -1,7 +1,9 @@
 import numpy as np
 from algorithms import Algorithms
+from helpers import Helpers
+from random import seed
 
-class Server(Algorithms.Perceptron):
+class Server(Algorithms):
 
     def __init__(self):
         """
@@ -15,22 +17,17 @@ class Server(Algorithms.Perceptron):
             Returns:
                 first_model_dict (dict): first model dictionary
         """
-        perceptron = Algorithms.Perceptron()
-
-        X_train = np.array([[0,0,1],
-                            [1,1,1],
-                            [1,0,1],
-                            [0,0,1],
-                            [0,1,1],
-                            [1,0,1],
-                            [1,0,0],
-                            [0,0,1],
-                            [0,1,1],
-                            [1,1,1]])
-
-        y_train = np.array([[0,1,1,0,0,1,1,0,0,1]]).T
-
-        first_model_dict = perceptron.train(X_train, y_train, 100)
+        nn = Algorithms.NeuralNetwork()
+        helper = Helpers()
+        seed(1)
+        data = helper.df_to_list('data.csv')
+        n_inputs = len(data[0]) - 1
+        n_outputs = len(set([row[-1] for row in data]))
+        print('first_model')
+        print(n_inputs)
+        print(n_outputs)
+        network = nn.initialize_network(n_inputs, 2, n_outputs)
+        first_model_dict = nn.train_network(network, data, 0.5, 100, n_outputs)
         return first_model_dict
 
     def create_devices(self):
@@ -43,7 +40,7 @@ class Server(Algorithms.Perceptron):
         device_list = []
         server = Server()
 
-        print("Enter the number of devices: ")
+        print("Enter the number of devices (users): ")
         n = int(input())
         for i in range(n):
             device_list.append(Device(i, server.first_model))
